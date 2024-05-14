@@ -16,28 +16,27 @@ if(isset($_COOKIE['seller_id'])) {
     <title>HERE Maps Integration</title>
     <style>
         #mapContainer {
-            width: 100%;
+            width: 50%;
             height: 500px;
+            margin: auto;
         }
     </style>
-    <script src="https://js.api.here.com/v3/3.1/mapsjs-core.js"
-            type="text/javascript" charset="utf-8"></script>
-    <script src="https://js.api.here.com/v3/3.1/mapsjs-service.js"
-            type="text/javascript" charset="utf-8"></script>
-    <script src="https://js.api.here.com/v3/3.1/mapsjs-ui.js"
-            type="text/javascript" charset="utf-8"></script>
-    <script src="https://js.api.here.com/v3/3.1/mapsjs-mapevents.js"
-            type="text/javascript" charset="utf-8"></script>
+    <script src="https://js.api.here.com/v3/3.1/mapsjs-core.js" type="text/javascript" charset="utf-8"></script>
+    <script src="https://js.api.here.com/v3/3.1/mapsjs-service.js" type="text/javascript" charset="utf-8"></script>
+    <script src="https://js.api.here.com/v3/3.1/mapsjs-ui.js" type="text/javascript" charset="utf-8"></script>
+    <script src="https://js.api.here.com/v3/3.1/mapsjs-mapevents.js" type="text/javascript" charset="utf-8"></script>
     <link rel="stylesheet" type="text/css" href="https://js.api.here.com/v3/3.1/mapsjs-ui.css" />
 </head>
 <body>
     <div id="mapContainer"></div>
-    <form id="locationForm" method="POST" action=" ">
-        <input type="text" id="latitude" name="latitude" readonly>
-        <input type="text" id="longitude" name="longitude" readonly>
-        <input type="submit" value="Save Location">
-    </form>
-    <button onclick="getCurrentLocation()">Get Current Location</button>
+
+        <form id="locationForm" method="POST" action=" ">
+            <input type="hidden" id="sellerId" name="sellerId" value= <?=$seller_id?> >
+            <input type="text" id="latitude" name="latitude" readonly>
+            <input type="text" id="longitude" name="longitude" readonly>
+            <input type="submit" value="Save Location">
+        </form>
+        <button onclick="getCurrentLocation()">Get Current Location</button>
 
     <script>
         // Initialize the platform object:
@@ -122,44 +121,47 @@ if(isset($_COOKIE['seller_id'])) {
             }
         }
     </script>
-    <?php
-        echo $seller_id;
-    ?>
 </body>
 </html>
 
 <?php
-// Database connection details
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "cakeshop_db";
+    if ($_SERVER["REQUEST_METHOD"] == "POST") {
+        // Check if required POST parameters are set
+        if (isset($_POST['sellerId']) && isset($_POST['latitude']) && isset($_POST['longitude'])) {
+            $seller_id = $_POST['sellerId'];
+            $latitude = $_POST['latitude'];
+            $longitude = $_POST['longitude'];
 
-// Create connection
-$conn = new mysqli($servername, $username, $password, $dbname);
+            // Validate the inputs
+            if (is_numeric($seller_id) && is_numeric($latitude) && is_numeric($longitude)) {
+                // Prepare and bind
+                $stmt = $conn->prepare("
+                    INSERT INTO location (sellerId, latitude, longitude) 
+                    VALUES (:sellerId, :latitude, :longitude)
+                    ON DUPLICATE KEY UPDATE
+                    latitude = VALUES(latitude),
+                    longitude = VALUES(longitude)
+                ");
 
-// Check connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+                // Bind parameters
+                $stmt->bindParam(':sellerId', $seller_id, PDO::PARAM_INT);
+                $stmt->bindParam(':latitude', $latitude, PDO::PARAM_STR);
+                $stmt->bindParam(':longitude', $longitude, PDO::PARAM_STR);
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $latitude = $_POST['latitude'];
-    $longitude = $_POST['longitude'];
-
-    // Prepare and bind
-    $stmt = $conn->prepare("INSERT INTO location (lat, lng) VALUES (?, ?)");
-    $stmt->bind_param("dd", $latitude, $longitude);
-
-    // Execute the query
-    if ($stmt->execute()) {
-        echo "New record created successfully";
-    } else {
-        echo "Error: " . $stmt->error;
+                // Execute the query
+                if ($stmt->execute()) {
+                    echo "Record inserted/updated successfully";
+                } else {
+                    echo "Error: Could not execute the query";
+                }
+            } else {
+                echo "Invalid input values.";
+            }
+        } else {
+            echo "All fields are required.";
+        }
     }
 
-    // Close statement and connection
-    $stmt->close();
-    $conn->close();
-}
+// Close the connection
+$conn = null;
 ?>
