@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customize Cake</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            margin-top: 50px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .options-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .option {
+            cursor: pointer;
+            margin: 5px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            transition: border-color 0.3s ease;
+        }
+        .option:hover {
+            border-color: #333;
+        }
+        .plate-option {
+            width: 100px;
+            height: 100px;
+            border-radius: 10px;
+            background-size: cover;
+            background-position: center;
+            border: 2px solid transparent;
+            transition: border-color 0.3s ease;
+        }
+        .plate-option:hover {
+            border-color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Customize Your Cake</h1>
+        <div class="options-container">
+            <div id="color-options">
+                <div class="option color-option" style="background-color: #ff0000" onclick="changeColor('cake', 0)"></div>
+                <div class="option color-option" style="background-color: #00ff00" onclick="changeColor('cake', 1)"></div>
+                <div class="option color-option" style="background-color: #0000ff" onclick="changeColor('cake', 2)"></div>
+                <div class="option color-option" style="background-color: #ffff00" onclick="changeColor('cake', 3)"></div>
+                <div class="option color-option" style="background-color: #ff00ff" onclick="changeColor('cake', 4)"></div>
+            </div>
+            
+            <div id="icing-options">
+                <div class="option color-option" style="background-color: #ffffff" onclick="changeColor('icing', 0)"></div>
+                <div class="option color-option" style="background-color: #ffcc00" onclick="changeColor('icing', 1)"></div>
+                <div class="option color-option" style="background-color: #cccccc" onclick="changeColor('icing', 2)"></div>
+                <div class="option color-option" style="background-color: #9900ff" onclick="changeColor('icing', 3)"></div>
+                <div class="option color-option" style="background-color: #00cccc" onclick="changeColor('icing', 4)"></div>
+            </div>
+
+            <div id="plate-options">
+                <div class="option plate-option" style="background-image: url('plate1.jpg')" onclick="changePlate('plate1')"></div>
+                <div class="option plate-option" style="background-image: url('plate2.jpg')" onclick="changePlate('plate2')"></div>
+                <div class="option plate-option" style="background-image: url('plate3.jpg')" onclick="changePlate('plate3')"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(110, window.innerWidth / window.innerHeight, 0.1, 700);
+        const renderer = new THREE.WebGLRenderer();
+        scene.background = new THREE.Color(0xeeeeee); // Light gray background color
+
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        const cakeGeometry = new THREE.CylinderGeometry(5, 5, 10, 32);
+        const cakeMaterial = new THREE.MeshBasicMaterial({ color: 0xffe5b4 });
+        const cake = new THREE.Mesh(cakeGeometry, cakeMaterial);
+        scene.add(cake);
+
+        const icingGeometry = new THREE.CylinderGeometry(5.2, 5.2, 1, 32);
+        const icingMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        const icing = new THREE.Mesh(icingGeometry, icingMaterial);
+        icing.position.y = 5;
+        scene.add(icing);
+
+        const plateGeometry = new THREE.CircleGeometry(6, 32);
+        let plateMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff }); // Default plate material
+        const plate = new THREE.Mesh(plateGeometry, plateMaterial);
+        plate.rotation.x = -Math.PI / 2; // Rotate to be horizontal
+        plate.position.y = -4.5; // Position below the cake
+        scene.add(plate);
+
+        camera.position.z = 15;
+        camera.position.y = 7;
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+        const pointLight = new THREE.PointLight(0xffffff, 1);
+        pointLight.position.set(5, 5, 5);
+        scene.add(pointLight);
+
+        // Add directional light
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        directionalLight.position.set(0, 1, 0); // Adjust the position as needed
+        scene.add(directionalLight);
+
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        function changeColor(target, colorIndex) {
+            const targetObject = (target === 'cake') ? cake : icing;
+            let newColor;
+            switch (colorIndex) {
+                case 0:
+                    newColor = 0xff0000; // Red
+                    break;
+                case 1:
+                    newColor = 0x00ff00; // Green
+                    break;
+                case 2:
+                    newColor = 0x0000ff; // Blue
+                    break;
+                case 3:
+                    newColor = 0xffff00; // Yellow
+                    break;
+                case 4:
+                    newColor = 0xff00ff; // Magenta
+                    break;
+                default:
+                    newColor = (target === 'cake') ? 0xffe5b4 : 0xffffff; // Default cake color or icing color
+                    break;
+            }
+            targetObject.material.color.setHex(newColor);
+        }
+
+        function changePlate(plateTexture) {
+            const textureLoader = new THREE.TextureLoader();
+            textureLoader.load(plateTexture + '.jpg', function (texture) {
+                plateMaterial.map = texture;
+                plateMaterial.needsUpdate = true;
+            });
+        }
+
+
+    </script>
+</body>
+</html>
