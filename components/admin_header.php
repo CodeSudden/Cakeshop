@@ -51,6 +51,7 @@
         <li> <a href="dashboard.php"><i class="fa fa-home" aria-hidden="true"></i>dashboard</a></li>
         <li> <a href="add_products.php"><i class="fa fa-shopping-bag" aria-hidden="true"></i>add products</a></li>
         <li> <a href="view_product.php"><i class="fa fa-book" aria-hidden="true"></i>view product</a></li>
+        <li> <a href="seller_loc.php"><i class="fas fa-map-marker-alt"></i>Store Location</a></li>
         <li> <a href="customized.php"><i class="fa fa-birthday-cake" aria-hidden="true"></i></i>request</a></li>
         <li> <a href="user_accounts.php"><i class="fa fa-user-circle" aria-hidden="true"></i>accounts</a></li>
         <li><a href="login.php" onclick="return confirm('Logout from this website?');">

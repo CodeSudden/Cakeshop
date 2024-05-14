@@ -1,3 +1,28 @@
+<?php
+include '../components/connect.php';
+
+if(isset($_POST['submit'])) {
+
+    $email = $_POST['email'];
+    $email = filter_var($email, FILTER_SANITIZE_STRING);
+
+    $pass = sha1($_POST['pass']);
+    $pass = filter_var($pass, FILTER_SANITIZE_STRING);
+
+    $select_seller = $conn->prepare("SELECT * FROM `sellers` WHERE email = ? AND password = ?");
+    $select_seller->execute([$email, $pass]);
+    $row = $select_seller->fetch(PDO::FETCH_ASSOC);
+
+    if ($select_seller->rowCount() > 0) {
+        setcookie('seller_id', $row['id'], time() + 60*60*24*30, '/');
+        header('location:dashboard.php');
+    }else{
+        $warning_msg[] = 'incorrect email or password';
+    }
+    
+}
+?>
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -43,31 +68,3 @@
 
 </body>
 </html>
-<?php
-include '../components/connect.php';
-
-if(isset($_POST['submit'])) {
-
-
-    $email = $_POST['email'];
-    $email = filter_var($email, FILTER_SANITIZE_STRING);
-
-    $pass = sha1($_POST['pass']);
-    $pass = filter_var($pass, FILTER_SANITIZE_STRING);
-
-    
-
-    $select_seller = $conn->prepare("SELECT * FROM `sellers` WHERE email = ? AND password = ?");
-    $select_seller->execute([$email, $pass]);
-    $row = $select_seller->fetch(PDO::FETCH_ASSOC);
-
-    if ($select_seller->rowCount() > 0) {
-        setcookie('seller_id', $row['id'], time() + 60*60*24*30, '/');
-        header('location:dashboard.php');
-    }else{
-        $warning_msg[] = 'incorrect email or password';
-    }
-    
-}
-
-?>
