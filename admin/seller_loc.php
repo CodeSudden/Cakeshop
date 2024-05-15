@@ -8,6 +8,22 @@ if(isset($_COOKIE['seller_id'])) {
     header('location:login.php');
 }
 
+// Query to get the seller's current location
+$latitude = null;
+$longitude = null;
+
+if ($seller_id !== '') {
+    $stmt = $conn->prepare("SELECT latitude, longitude FROM location WHERE sellerId = :sellerId LIMIT 1");
+    $stmt->bindParam(':sellerId', $seller_id, PDO::PARAM_INT);
+    $stmt->execute();
+    $location = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($location) {
+        $latitude = $location['latitude'];
+        $longitude = $location['longitude'];
+    }
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -20,6 +36,11 @@ if(isset($_COOKIE['seller_id'])) {
             height: 500px;
             margin: auto;
         }
+        .LocationForm{
+            width: 50%;
+            height: auto;
+            margin: auto;
+        }
     </style>
     <script src="https://js.api.here.com/v3/3.1/mapsjs-core.js" type="text/javascript" charset="utf-8"></script>
     <script src="https://js.api.here.com/v3/3.1/mapsjs-service.js" type="text/javascript" charset="utf-8"></script>
@@ -29,15 +50,15 @@ if(isset($_COOKIE['seller_id'])) {
 </head>
 <body>
     <div id="mapContainer"></div>
-
-        <form id="locationForm" method="POST" action=" ">
-            <input type="hidden" id="sellerId" name="sellerId" value= <?=$seller_id?> >
-            <input type="text" id="latitude" name="latitude" readonly>
-            <input type="text" id="longitude" name="longitude" readonly>
+    <div class="LocationForm">
+        <form id="locationForm" method="POST" action="">
+            <input type="hidden" id="sellerId" name="sellerId" value="<?= $seller_id ?>">
+            <input type="text" id="latitude" name="latitude" value="<?= $latitude !== null ? $latitude : '' ?>" readonly>
+            <input type="text" id="longitude" name="longitude" value="<?= $longitude !== null ? $longitude : '' ?>" readonly>
             <input type="submit" value="Save Location">
         </form>
         <button onclick="getCurrentLocation()">Get Current Location</button>
-
+    </div>
     <script>
         // Initialize the platform object:
         var platform = new H.service.Platform({
@@ -76,6 +97,13 @@ if(isset($_COOKIE['seller_id'])) {
         // Create a group to hold map markers
         var group = new H.map.Group();
         map.addObject(group);
+
+        <?php if ($latitude !== null && $longitude !== null): ?>
+            // Add a marker for the seller's location
+            addMarkerToGroup(group, {lat: <?= $latitude ?>, lng: <?= $longitude ?>}, 'Seller Location');
+            map.setCenter({lat: <?= $latitude ?>, lng: <?= $longitude ?>});
+            map.setZoom(15);
+        <?php endif; ?>
 
         // Add event listeners:
         map.addEventListener('tap', function(evt) {
@@ -150,15 +178,15 @@ if(isset($_COOKIE['seller_id'])) {
 
                 // Execute the query
                 if ($stmt->execute()) {
-                    echo "Record inserted/updated successfully";
+                    echo "<script>alert('Location Updated, Please Refresh Page')</script>";
                 } else {
-                    echo "Error: Could not execute the query";
+                    echo "<script>alert('Error: Could not execute the query')</script>";
                 }
             } else {
-                echo "Invalid input values.";
+                echo "<script>alert('Invalid input values.')</script>";
             }
         } else {
-            echo "All fields are required.";
+            echo "<script>alert('All fields are required.')</script>";
         }
     }
 
