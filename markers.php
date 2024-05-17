@@ -3,7 +3,7 @@ include 'components/connect.php';
 
 try {
 
-    $sql = "SELECT sellerId, latitude, longitude FROM location";
+    $sql = "SELECT * FROM location";
     $stmt = $conn->prepare($sql);
     $stmt->execute();
 
@@ -13,7 +13,9 @@ try {
         $markers[] = array(
             "lat" => $row["latitude"],
             "lng" => $row["longitude"],
-            "info" => $row["sellerId"]
+            "info" => $row["sellerId"],
+            "shopname" => $row["shopname"],
+            "url" => "view_seller.php?sid={$row['sellerId']}"
         );
     }
 

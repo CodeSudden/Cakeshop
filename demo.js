@@ -22,12 +22,26 @@ var behavior = new H.mapevents.Behavior(new H.mapevents.MapEvents(map));
 var ui = H.ui.UI.createDefault(map, defaultLayers, 'en-US');
 
 // Function to add a marker to the map
-function addMarker(map, lat, lng, info, icon) {
+function addMarker(map, lat, lng, info, icon, url) {
   var marker = new H.map.Marker({ lat: lat, lng: lng }, { icon: icon });
   marker.addEventListener('tap', function () {
+    window.location.href = url;  // Redirect to the URL when marker is clicked
+  });
+  map.addObject(marker);
+}
+
+// Function to add a marker to the map
+function currentloc(map, lat, lng, info, icon) {
+  // Create a new marker object with the specified latitude, longitude, and optional icon
+  var marker = new H.map.Marker({ lat: lat, lng: lng }, { icon: icon });
+  // Add an event listener to the marker to handle 'tap' events (e.g., when the marker is clicked)
+  marker.addEventListener('tap', function () {
+    // Create a new info bubble (popup) at the marker's location with the specified info content
     var bubble = new H.ui.InfoBubble({ lat: lat, lng: lng }, { content: info });
+    // Add the info bubble to the map's UI
     ui.addBubble(bubble);
   });
+  // Add the marker object to the map
   map.addObject(marker);
 }
 
@@ -39,7 +53,7 @@ async function fetchMarkersData() {
     let data = await response.json();
     markersData = data;
     markersData.forEach(marker => {
-      addMarker(map, marker.lat, marker.lng, marker.info, null);
+      addMarker(map, marker.lat, marker.lng, marker.info, null, marker.url);  // Pass the URL to the addMarker function
     });
   } catch (error) {
     console.error('Error fetching markers data:', error);
@@ -56,12 +70,12 @@ function updateMarkers() {
           lng: position.coords.longitude
         };
 
-        map.removeObjects(map.getObjects());
-        addMarker(map, pos.lat, pos.lng, "Your Location", userIcon);
+        //map.removeObjects(map.getObjects());
+        currentloc(map, pos.lat, pos.lng, "Your Location", userIcon);
 
-        markersData.forEach(data => {
+        /*markersData.forEach(data => {
           addMarker(map, data.lat, data.lng, data.info, null);
-        });
+        });*/
 
         map.setCenter(pos);
       },
@@ -87,6 +101,7 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 // Find the nearest cakeshop to the user and add a marker for it
 function findNearestCakeshop() {
   if (navigator.geolocation) {
+    map.removeObjects(map.getObjects());
     navigator.geolocation.getCurrentPosition(position => {
       const userLat = position.coords.latitude;
       const userLng = position.coords.longitude;
@@ -103,10 +118,9 @@ function findNearestCakeshop() {
       const nearestMarkerData = markersData[nearest.index];
 
       // Create a marker icon for the nearest cakeshop
-      const nearestIcon = new H.map.Icon('https://img.icons8.com/material-two-tone/48/marker.png');
-
+      const nearestIcon = new H.map.Icon('https://img.icons8.com/skeuomorphism/32/marker.png');
       // Add marker for the nearest cakeshop on the map
-      addMarker(map, nearestMarkerData.lat, nearestMarkerData.lng, nearestMarkerData.info, nearestIcon);
+      addMarker(map, nearestMarkerData.lat, nearestMarkerData.lng, nearestMarkerData.shopname, nearestIcon, nearestMarkerData.url);
 
       // Display list of nearest cakeshops
       const nearestCakeshopsDiv = document.createElement('div');

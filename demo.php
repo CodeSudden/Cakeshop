@@ -30,25 +30,63 @@
     <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
     <title>Draggable Marker</title>
     <link rel="stylesheet" type="text/css" href="https://js.api.here.com/v3/3.1/mapsjs-ui.css" />
-    <link rel="stylesheet" type="text/css" href="demo.css" />
-    <link rel="stylesheet" type="text/css" href="styles.css" />
-    <link rel="stylesheet" type="text/css" href="../template.css" />
-    <script type="text/javascript" src='../test-credentials.js'></script>    
+    <link rel="stylesheet" type="text/css" href="demo.css" /> 
     <script type="text/javascript" src="https://js.api.here.com/v3/3.1/mapsjs-core.js"></script>
     <script type="text/javascript" src="https://js.api.here.com/v3/3.1/mapsjs-service.js"></script>
     <script type="text/javascript" src="https://js.api.here.com/v3/3.1/mapsjs-ui.js"></script>
     <script type="text/javascript" src="https://js.api.here.com/v3/3.1/mapsjs-mapevents.js"></script>
   </head>
   <body id="markers-on-the-map">
+
     <div class="page-header">
         <h1>Cake Shops</h1>
-        <p></p>
     </div>
-    <p></p>
+
     <div id="map"></div>
-    <h3></h3>
-    <p><code></code> 
-     <code></code> <code></code> <code></code> </p>
+
+    <form action="" method="GET">
+        <input type="text" name="search" placeholder="Search for a cake...">
+        <input type="submit" value="Search">
+    </form>
+
+    <?php
+    function searchCakes($search) {
+      
+        // Prepare the SQL statement
+        $stmt = $conn->prepare("SELECT * FROM products WHERE name LIKE ?");
+        $likeSearch = "%" . $search . "%";
+        $stmt->bind_param("s", $likeSearch);
+
+        // Execute the query
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        // Check if any results were found
+        if ($result->num_rows > 0) {
+            // Output data of each row
+            while ($row = $result->fetch_assoc()) {
+                echo "ID: " . $row["id"] . " - Name: " . $row["name"] . " - Price: " . $row["price"] . "<br>";
+            }
+        } else {
+            echo "No cakes found.";
+        }
+
+        // Close the connection
+        $stmt->close();
+        $conn->close();
+    }
+
+    // Check if the search form was submitted
+    if (isset($_GET['search'])) {
+        $search = $_GET['search'];
+
+        // Display the results
+        searchCakes($search);
+    }
+    ?>
+
+    <!--<p><code></code><code></code> <code></code> <code></code></p>-->
+
     <script type="text/javascript" src='demo.js'></script>
   </body>
 </html>
