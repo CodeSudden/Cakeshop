@@ -8,6 +8,12 @@ if(isset($_COOKIE['seller_id'])) {
     header('location:login.php');
 }
 
+// Prepare the SQL statement with a placeholder
+$stmt = $conn->prepare("SELECT name FROM `sellers` WHERE id = :seller_id");
+$stmt->bindParam(':seller_id', $seller_id, PDO::PARAM_INT);
+$stmt->execute();
+$shopname = $stmt->fetchColumn();
+
 // Query to get the seller's current location
 $latitude = null;
 $longitude = null;
@@ -29,17 +35,43 @@ if ($seller_id !== '') {
 <!DOCTYPE html>
 <html>
 <head>
-    <title>HERE Maps Integration</title>
+    <title>Seller Location</title>
     <style>
-        #mapContainer {
+        body{
+            height: auto;
+            width: auto;
+            margin-top: 120px;
+        }
+        .title{
+            text-align: center;
+        }
+        #mapContainer {            
             width: 50%;
             height: 500px;
+            margin-top: 70px;
             margin: auto;
         }
         .LocationForm{
+            padding: 50px;
+            margin: auto;
             width: 50%;
             height: auto;
-            margin: auto;
+        }
+        button{
+            color: black;
+            background-color: pink;
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            margin-bottom: 10px;
+        }
+        button:hover{
+            cursor: pointer;
+            background-color: rgb(204, 165, 171);
+        }
+        .loc-sbmt{
+            padding: 10px;
+            border-radius: 10px;
         }
     </style>
     <script src="https://js.api.here.com/v3/3.1/mapsjs-core.js" type="text/javascript" charset="utf-8"></script>
@@ -49,15 +81,19 @@ if ($seller_id !== '') {
     <link rel="stylesheet" type="text/css" href="https://js.api.here.com/v3/3.1/mapsjs-ui.css" />
 </head>
 <body>
-    <div id="mapContainer"></div>
+    <h1 class="title">Pin your store Location</h1>
+    <div id="mapContainer">
+        <button onclick="goback()">Go back</button>
+        <button class="btn-currloc" onclick="getCurrentLocation()">Get Current Location</button>
+    </div>
     <div class="LocationForm">
         <form id="locationForm" method="POST" action="">
+            <input type="hidden" id="shopname" name="shopname" value="<?= $shopname ?>">
             <input type="hidden" id="sellerId" name="sellerId" value="<?= $seller_id ?>">
-            <input type="text" id="latitude" name="latitude" value="<?= $latitude !== null ? $latitude : '' ?>" readonly>
-            <input type="text" id="longitude" name="longitude" value="<?= $longitude !== null ? $longitude : '' ?>" readonly>
-            <input type="submit" value="Save Location">
+            Latitude: <input class="lat" type="text" id="latitude" name="latitude" value="<?= $latitude !== null ? $latitude : '' ?>" >
+            Longitude: <input class="lng" type="text" id="longitude" name="longitude" value="<?= $longitude !== null ? $longitude : '' ?>" >
+            <input class="loc-sbmt" type="submit" value="Save Location">
         </form>
-        <button onclick="getCurrentLocation()">Get Current Location</button>
     </div>
     <script>
         // Initialize the platform object:
@@ -148,6 +184,10 @@ if ($seller_id !== '') {
                 alert("Geolocation is not supported by this browser.");
             }
         }
+
+        function goback() {
+            window.location.href = 'dashboard.php';
+        }
     </script>
 </body>
 </html>
@@ -155,8 +195,9 @@ if ($seller_id !== '') {
 <?php
     if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Check if required POST parameters are set
-        if (isset($_POST['sellerId']) && isset($_POST['latitude']) && isset($_POST['longitude'])) {
+        if (isset($_POST['sellerId']) && $_POST['shopname'] && isset($_POST['latitude']) && isset($_POST['longitude'])) {
             $seller_id = $_POST['sellerId'];
+            $shopname = $_POST['shopname'];
             $latitude = $_POST['latitude'];
             $longitude = $_POST['longitude'];
 
@@ -164,8 +205,8 @@ if ($seller_id !== '') {
             if (is_numeric($seller_id) && is_numeric($latitude) && is_numeric($longitude)) {
                 // Prepare and bind
                 $stmt = $conn->prepare("
-                    INSERT INTO location (sellerId, latitude, longitude) 
-                    VALUES (:sellerId, :latitude, :longitude)
+                    INSERT INTO location (sellerId, latitude, longitude, shopname) 
+                    VALUES (:sellerId, :latitude, :longitude, :shopname)
                     ON DUPLICATE KEY UPDATE
                     latitude = VALUES(latitude),
                     longitude = VALUES(longitude)
@@ -175,6 +216,7 @@ if ($seller_id !== '') {
                 $stmt->bindParam(':sellerId', $seller_id, PDO::PARAM_INT);
                 $stmt->bindParam(':latitude', $latitude, PDO::PARAM_STR);
                 $stmt->bindParam(':longitude', $longitude, PDO::PARAM_STR);
+                $stmt->bindParam(':shopname', $shopname, PDO::PARAM_STR);
 
                 // Execute the query
                 if ($stmt->execute()) {

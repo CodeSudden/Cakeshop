@@ -1,92 +1,85 @@
 <?php
-    include 'components/connect.php';
+include 'components/connect.php';
 
-    if (isset($_COOKIE['user_id']))  {
-        $user_id = $_COOKIE['user_id'];
-    }else{
-        $user_id = '';
-    }
+if (isset($_COOKIE['user_id'])) {
+    $user_id = $_COOKIE['user_id'];
+} else {
+    $user_id = '';
+}
 
 ?>
+
+<?php include 'components/user_header.php'; ?>
 
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale= 1.0">
-    <link rel="stylesheet" type="text/css" href="css/user_style1.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <title>Cake Bliss - Home Page</title>
-
-</head>
-<body>
-
-<?php include 'components/user_header.php';?>
-
-<!DOCTYPE html>
-<html>
-  <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
-    <title>Draggable Marker</title>
+    <title>Find Cake Shops</title>
     <link rel="stylesheet" type="text/css" href="https://js.api.here.com/v3/3.1/mapsjs-ui.css" />
-    <link rel="stylesheet" type="text/css" href="demo.css" /> 
+    <link rel="stylesheet" type="text/css" href="demo.css" />
+    <link rel="stylesheet" type="text/css" href="css/user_style1.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <script type="text/javascript" src="https://js.api.here.com/v3/3.1/mapsjs-core.js"></script>
     <script type="text/javascript" src="https://js.api.here.com/v3/3.1/mapsjs-service.js"></script>
     <script type="text/javascript" src="https://js.api.here.com/v3/3.1/mapsjs-ui.js"></script>
     <script type="text/javascript" src="https://js.api.here.com/v3/3.1/mapsjs-mapevents.js"></script>
-  </head>
-  <body id="markers-on-the-map">
+</head>
+<body id="markers-on-the-map">
 
-    <div class="page-header">
-        <h1>Cake Shops</h1>
-    </div>
+<div class="page-header">
+    <h1>Find Cake Shops</h1>
+</div>
 
-    <div id="map"></div>
+<div id="map"></div>
 
-    <form action="" method="GET">
-        <input type="text" name="search" placeholder="Search for a cake...">
-        <input type="submit" value="Search">
-    </form>
-
+<div class="contain">
+    <button class="btn-nearest" onclick="findNearestCakeshop()">Find Nearest Cakeshop</button>
+    <button class="btn-clear" id="clearSearch">Clear Search</button>
+        <form class="search" action="" method="GET">
+            <input type="text" name="search" placeholder="Search for a cake...">
+            <button class="btn-sbmt" type="submit" class="submit">
+                <i class="fas fa-search"></i>
+            </button>
+        </form>
+            
+        <div id="search-results"></div>
     <?php
     function searchCakes($search) {
-      
+        global $conn; // Declare $conn as global to access it inside the function
+
         // Prepare the SQL statement
-        $stmt = $conn->prepare("SELECT * FROM products WHERE name LIKE ?");
+        $stmt = $conn->prepare("
+            SELECT p.id, p.name, p.price, l.latitude, l.longitude, l.shopname, l.sellerId 
+            FROM products p 
+            JOIN location l ON p.seller_Id = l.sellerId 
+            WHERE p.name LIKE ?
+        ");
         $likeSearch = "%" . $search . "%";
-        $stmt->bind_param("s", $likeSearch);
+        $stmt->bindParam(1, $likeSearch, PDO::PARAM_STR);
 
         // Execute the query
         $stmt->execute();
-        $result = $stmt->get_result();
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // Check if any results were found
-        if ($result->num_rows > 0) {
-            // Output data of each row
-            while ($row = $result->fetch_assoc()) {
-                echo "ID: " . $row["id"] . " - Name: " . $row["name"] . " - Price: " . $row["price"] . "<br>";
-            }
-        } else {
-            echo "No cakes found.";
-        }
-
-        // Close the connection
-        $stmt->close();
-        $conn->close();
+        // Return results as JSON
+        return json_encode($result);
     }
 
     // Check if the search form was submitted
     if (isset($_GET['search'])) {
         $search = $_GET['search'];
-
-        // Display the results
-        searchCakes($search);
+        echo '<script>var searchResults = ' . searchCakes($search) . ';</script>';
+        ?>    <div id="noResultsMessage">Cake not found </div>
+        <?php
+    } else {
+        echo '<script>var searchResults = [];</script>';
     }
     ?>
 
-    <!--<p><code></code><code></code> <code></code> <code></code></p>-->
+</div>
 
-    <script type="text/javascript" src='demo.js'></script>
-  </body>
+<script type="text/javascript" src='demo.js'></script>
+</body>
 </html>

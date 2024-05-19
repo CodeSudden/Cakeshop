@@ -21,9 +21,38 @@ window.addEventListener('resize', () => map.getViewPort().resize());
 var behavior = new H.mapevents.Behavior(new H.mapevents.MapEvents(map));
 var ui = H.ui.UI.createDefault(map, defaultLayers, 'en-US');
 
+// Function to create a custom icon with label
+function createIcon(label) {
+  var canvas = document.createElement('canvas');
+  var size = 40;
+  canvas.width = size;
+  canvas.height = size;
+  var context = canvas.getContext('2d');
+
+  // Draw the marker
+  context.beginPath();
+  context.arc(size / 2, size / 2, size / 2, 0, 2 * Math.PI, false);
+  context.fillStyle = 'pink';
+  context.fill();
+  context.lineWidth = 1;
+  context.strokeStyle = '#000';
+  context.stroke();
+
+  // Draw the label
+  context.font = '12px Arial';
+  context.fillStyle = '#000';
+  context.textAlign = 'center';
+  context.fillText(label, size / 2, size / 2 + 4);
+
+  // Create the icon
+  var icon = new H.map.Icon(canvas.toDataURL(), { size: { w: size, h: size } });
+  return icon;
+}
+
 // Function to add a marker to the map
 function addMarker(map, lat, lng, info, icon, url) {
-  var marker = new H.map.Marker({ lat: lat, lng: lng }, { icon: icon });
+  var markerIcon = icon || createIcon(info); // Use the provided icon or create one with the label
+  var marker = new H.map.Marker({ lat: lat, lng: lng }, { icon: markerIcon });
   marker.addEventListener('tap', function () {
     window.location.href = url;  // Redirect to the URL when marker is clicked
   });
@@ -45,16 +74,20 @@ function currentloc(map, lat, lng, info, icon) {
   map.addObject(marker);
 }
 
-// Fetch marker data from server
+
+
+// Fetch marker data from the server
 async function fetchMarkersData() {
   try {
     let response = await fetch('markers.php');
     if (!response.ok) throw new Error('Network response was not ok');
     let data = await response.json();
     markersData = data;
-    markersData.forEach(marker => {
-      addMarker(map, marker.lat, marker.lng, marker.info, null, marker.url);  // Pass the URL to the addMarker function
-    });
+    if (!searchResults || searchResults.length === 0) {
+      markersData.forEach(marker => {
+        addMarker(map, marker.lat, marker.lng, marker.shopname, null, marker.url);  // Pass the URL to the addMarker function
+      });
+    }
   } catch (error) {
     console.error('Error fetching markers data:', error);
   }
@@ -70,13 +103,7 @@ function updateMarkers() {
           lng: position.coords.longitude
         };
 
-        //map.removeObjects(map.getObjects());
         currentloc(map, pos.lat, pos.lng, "Your Location", userIcon);
-
-        /*markersData.forEach(data => {
-          addMarker(map, data.lat, data.lng, data.info, null);
-        });*/
-
         map.setCenter(pos);
       },
       function () {
@@ -94,11 +121,10 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
   const a = 0.5 - Math.cos(dLat) / 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * (1 - Math.cos(dLon)) / 2;
-
   return R * 2 * Math.asin(Math.sqrt(a));
 }
 
-// Find the nearest cakeshop to the user and add a marker for it
+// Find the nearest cakeshop
 function findNearestCakeshop() {
   if (navigator.geolocation) {
     map.removeObjects(map.getObjects());
@@ -128,26 +154,45 @@ function findNearestCakeshop() {
       distances.forEach(item => {
         const index = item.index;
         const distance = item.distance.toFixed(2);
-        nearestCakeshopsDiv.innerHTML += `<p>${markersData[index].info} - ${distance} km</p>`;
+        nearestCakeshopsDiv.innerHTML += `<p>${markersData[index].shopname} - ${distance} km</p>`;
       });
 
-      document.body.appendChild(nearestCakeshopsDiv);
+        // Get the container element with the class "contain"
+        const containElement = document.querySelector('.contain');
+
+        // Append the nearestCakeshopsDiv to the container element
+        containElement.appendChild(nearestCakeshopsDiv);     
+        document.getElementById('noResultsMessage').style.display = 'none';
     });
   } else {
     console.log('Error: Geolocation is not supported by this browser.');
   }
 }
 
-// Add a button to find the nearest cakeshop
-const findNearestButton = document.createElement('button');
-findNearestButton.textContent = 'Find Nearest Cakeshop';
-findNearestButton.style.backgroundColor = 'pink';
-findNearestButton.style.color = 'white';
-findNearestButton.style.borderRadius = '10px';
-findNearestButton.style.padding = '10px 20px';
-findNearestButton.style.fontSize = '16px';
-findNearestButton.addEventListener('click', findNearestCakeshop);
-document.body.appendChild(findNearestButton);
+// Display search results on the map
+function displaySearchResults() {
+  const noResultsMessage = document.getElementById('noResultsMessage');
+  if (typeof searchResults !== 'undefined' && searchResults.length > 0) {
+    map.removeObjects(map.getObjects());
+    searchResults.forEach(result => {
+      addMarker(map, result.latitude, result.longitude, result.shopname, null, `view_seller.php?sid=${result.sellerId}`);
+    });
+    document.getElementById('clearSearch').style.display = 'block'; // Show the clear search button
+    noResultsMessage.style.display = 'none'; // Hide the no results message
+  } else {
+    noResultsMessage.style.display = 'block'; // Show the no results message
+    document.getElementById('clearSearch').style.display = 'none'; // Hide the clear search button
+  }
+}
+
+// Clear search results and reload default markers
+document.getElementById('clearSearch').addEventListener('click', function () {
+  searchResults = []; // Clear the search results
+  map.removeObjects(map.getObjects()); // Remove all markers
+  fetchMarkersData(); // Reload the default markers
+  document.getElementById('clearSearch').style.display = 'none'; // Hide the clear search button
+  document.getElementById('noResultsMessage').style.display = 'none'; // Hide the no results message
+});
 
 // Check and store markers in local storage
 function checkAndSetMarkers() {
@@ -176,5 +221,6 @@ const userIcon = new H.map.Icon('https://img.icons8.com/color/48/000000/marker.p
 // Fetch and update markers on load
 fetchMarkersData();
 updateMarkers();
+displaySearchResults();
 checkAndSetMarkers();
 loadMarkersFromLocalStorage();

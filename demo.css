@@ -1,10 +1,68 @@
 #map {
-    width: 95%;
-    height: 450px;
+    margin: auto;
+    width: 80%;
+    height: 550px;
     background: grey;
+}
+
+.contain{
+    margin: auto;
+    width: 70%;
+    padding: 15px;
 }
 
 #panel {
     width: 100%;
     height: 400px;
+}
+
+.page-header{
+    text-align: center;
+    margin: 25px;
+}
+
+button{
+    height: auto;
+    width: auto;
+    background-color: pink;
+    padding: 15px;
+    border-radius: 10px;
+}
+
+.btn-clear{
+    height: auto;
+    width: auto;
+    background-color: pink;
+    padding: 15px;
+    border-radius: 10px;
+    float: right;
+    margin-left: 5px;
+}
+
+.search{
+    float: right;
+}
+
+.search input[type="text"]{
+    height: auto;
+    width: auto;
+    border: 1px solid pink;
+    padding: 15px;
+    border-radius: 5px;
+}
+
+.search input[type="text"]:focus{
+    border: 1px solid rgb(138, 110, 115);
+}
+
+button:hover{
+    background-color: rgb(204, 165, 171);
+    color: black;
+    cursor: pointer;
+}
+
+#noResultsMessage{
+    font-size: 24px;
+    font-weight: bolder;
+    text-align: center;
 }
