@@ -23,29 +23,9 @@ var ui = H.ui.UI.createDefault(map, defaultLayers, 'en-US');
 
 // Function to create a custom icon with label
 function createIcon(label) {
-  var canvas = document.createElement('canvas');
-  var size = 40;
-  canvas.width = size;
-  canvas.height = size;
-  var context = canvas.getContext('2d');
+  var iconUrl = 'https://img.icons8.com/fluency/48/marker.png';
+  var icon = new H.map.Icon(iconUrl);
 
-  // Draw the marker
-  context.beginPath();
-  context.arc(size / 2, size / 2, size / 2, 0, 2 * Math.PI, false);
-  context.fillStyle = 'pink';
-  context.fill();
-  context.lineWidth = 1;
-  context.strokeStyle = '#000';
-  context.stroke();
-
-  // Draw the label
-  context.font = '12px Arial';
-  context.fillStyle = '#000';
-  context.textAlign = 'center';
-  context.fillText(label, size / 2, size / 2 + 4);
-
-  // Create the icon
-  var icon = new H.map.Icon(canvas.toDataURL(), { size: { w: size, h: size } });
   return icon;
 }
 
@@ -57,6 +37,12 @@ function addMarker(map, lat, lng, info, icon, url) {
     window.location.href = url;  // Redirect to the URL when marker is clicked
   });
   map.addObject(marker);
+
+  // Show label as an info bubble
+  marker.addEventListener('pointerenter', function () {
+    var bubble = new H.ui.InfoBubble({ lat: lat, lng: lng }, { content: `<a href="${url}" target="_blank">${info}</a>` });
+    ui.addBubble(bubble);
+  });
 }
 
 // Function to add a marker to the map
@@ -73,8 +59,6 @@ function currentloc(map, lat, lng, info, icon) {
   // Add the marker object to the map
   map.addObject(marker);
 }
-
-
 
 // Fetch marker data from the server
 async function fetchMarkersData() {
@@ -144,7 +128,7 @@ function findNearestCakeshop() {
       const nearestMarkerData = markersData[nearest.index];
 
       // Create a marker icon for the nearest cakeshop
-      const nearestIcon = new H.map.Icon('https://img.icons8.com/skeuomorphism/32/marker.png');
+      const nearestIcon = new H.map.Icon('https://img.icons8.com/fluency/48/marker.png');
       // Add marker for the nearest cakeshop on the map
       addMarker(map, nearestMarkerData.lat, nearestMarkerData.lng, nearestMarkerData.shopname, nearestIcon, nearestMarkerData.url);
 

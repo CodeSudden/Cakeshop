@@ -18,7 +18,7 @@ if (isset($_COOKIE['user_id'])) {
     <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
     <title>Find Cake Shops</title>
     <link rel="stylesheet" type="text/css" href="https://js.api.here.com/v3/3.1/mapsjs-ui.css" />
-    <link rel="stylesheet" type="text/css" href="demo.css" />
+    <link rel="stylesheet" type="text/css" href="store_map.css" />
     <link rel="stylesheet" type="text/css" href="css/user_style1.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <script type="text/javascript" src="https://js.api.here.com/v3/3.1/mapsjs-core.js"></script>
@@ -80,6 +80,6 @@ if (isset($_COOKIE['user_id'])) {
 
 </div>
 
-<script type="text/javascript" src='demo.js'></script>
+<script type="text/javascript" src='store_map.js'></script>
 </body>
 </html>

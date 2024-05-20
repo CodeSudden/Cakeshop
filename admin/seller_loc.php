@@ -220,7 +220,7 @@ if ($seller_id !== '') {
 
                 // Execute the query
                 if ($stmt->execute()) {
-                    echo "<script>alert('Location Updated, Please Refresh Page')</script>";
+                    echo "<script>window.location.href = 'seller_loc.php';</script>";
                 } else {
                     echo "<script>alert('Error: Could not execute the query')</script>";
                 }
