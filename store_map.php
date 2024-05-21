@@ -35,7 +35,7 @@ if (isset($_COOKIE['user_id'])) {
 <div id="map"></div>
 
 <div class="contain">
-    <button class="btn-nearest" onclick="findNearestCakeshop()">Find Nearest Cakeshop</button>
+    <button class="btn-nearest" onclick="findNearestCakeshops()">Find Nearest Cakeshop</button>
     <button class="btn-clear" id="clearSearch">Clear Search</button>
         <form class="search" action="" method="GET">
             <input type="text" name="search" placeholder="Search for a cake...">

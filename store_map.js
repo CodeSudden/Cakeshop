@@ -108,11 +108,19 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
   return R * 2 * Math.asin(Math.sqrt(a));
 }
 
-// Find the nearest cakeshop
-function findNearestCakeshop() {
+// Find the nearest cakeshops
+async function findNearestCakeshops() {
+  console.log("Function start"); // Debug log
   if (navigator.geolocation) {
     map.removeObjects(map.getObjects());
-    navigator.geolocation.getCurrentPosition(position => {
+
+    try {
+      console.log("Getting position"); // Debug log
+      const position = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject);
+      });
+
+      console.log("Position acquired"); // Debug log
       const userLat = position.coords.latitude;
       const userLng = position.coords.longitude;
 
@@ -123,35 +131,60 @@ function findNearestCakeshop() {
 
       distances.sort((a, b) => a.distance - b.distance);
 
-      // Find the nearest cakeshop
-      const nearest = distances[0];
-      const nearestMarkerData = markersData[nearest.index];
+      console.log("Distances calculated and sorted"); // Debug log
 
-      // Create a marker icon for the nearest cakeshop
+      // Find the three nearest cakeshops
+      const nearestMarkersData = distances.slice(0, 3).map(item => markersData[item.index]);
+
+      // Create a marker icon for the nearest cakeshops
       const nearestIcon = new H.map.Icon('https://img.icons8.com/fluency/48/marker.png');
-      // Add marker for the nearest cakeshop on the map
-      addMarker(map, nearestMarkerData.lat, nearestMarkerData.lng, nearestMarkerData.shopname, nearestIcon, nearestMarkerData.url);
+
+      // Add markers for the nearest cakeshops on the map
+      nearestMarkersData.forEach((markerData, i) => {
+        setTimeout(() => {
+          console.log("Adding marker:", markerData.shopname); // Debug log
+          addMarker(map, markerData.lat, markerData.lng, markerData.shopname, nearestIcon, markerData.url);
+        }, i * 50); // Slight delay to break the operations
+      });
 
       // Display list of nearest cakeshops
       const nearestCakeshopsDiv = document.createElement('div');
       nearestCakeshopsDiv.innerHTML = "<h3>Nearest Cakeshops:</h3>";
-      distances.forEach(item => {
-        const index = item.index;
-        const distance = item.distance.toFixed(2);
-        nearestCakeshopsDiv.innerHTML += `<p>${markersData[index].shopname} - ${distance} km</p>`;
+
+      // Remove any previous results
+      const containElement = document.querySelector('.contain');
+      const previousResults = containElement.querySelector('div');
+      if (previousResults) {
+        containElement.removeChild(previousResults);
+      }
+
+      // Append the new results
+      distances.slice(0, 3).forEach((item, i) => {
+        setTimeout(() => {
+          const index = item.index;
+          const distance = item.distance.toFixed(2);
+          nearestCakeshopsDiv.innerHTML += `<p>${markersData[index].shopname} - ${distance} km</p>`;
+          
+          // Force reflow
+          void nearestCakeshopsDiv.offsetWidth;
+          
+          if (i === 2) {
+            containElement.appendChild(nearestCakeshopsDiv);
+            document.getElementById('noResultsMessage').style.display = 'none';
+            console.log("Display update complete"); // Debug log
+          }
+        }, i * 50); // Slight delay to break the operations
       });
-
-        // Get the container element with the class "contain"
-        const containElement = document.querySelector('.contain');
-
-        // Append the nearestCakeshopsDiv to the container element
-        containElement.appendChild(nearestCakeshopsDiv);     
-        document.getElementById('noResultsMessage').style.display = 'none';
-    });
+    } catch (error) {
+      console.log('Error: Geolocation is not supported by this browser or user denied geolocation.');
+    }
   } else {
     console.log('Error: Geolocation is not supported by this browser.');
   }
+  console.log("Function end"); // Debug log
 }
+
+
 
 // Display search results on the map
 function displaySearchResults() {
