@@ -15,8 +15,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $mail->isSMTP();
         $mail->Host = 'smtp.gmail.com';
         $mail->SMTPAuth = true;
-        $mail->Username = 'cakebliss3d@gmail.com';  // Update with your SMTP username
-        $mail->Password = 'gfid wnwc cdlg rliu';  // Update with your SMTP password
+        $mail->Username = '';  // Update with your SMTP username
+        $mail->Password = '';  // Update with your SMTP password
         $mail->SMTPSecure = 'ssl';
         $mail->Port = 465;
 
